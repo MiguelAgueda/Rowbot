@@ -1,0 +1,10 @@
+.vs
+*.sdf
+sdk/obj
+**/ipch
+.vscode/
+extern/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+*.cmake
