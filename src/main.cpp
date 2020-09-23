@@ -3,16 +3,10 @@
 #include <cmath>
 #include <bits/stdc++.h> 
 #include <i2c_comm.h>
-// #include <opencv2/opencv.hpp>
-// #include <fdeep/fdeep.hpp>
 #include <time.h>
-// #include <opencv2/core.hpp>
-// #include <opencv2/highgui/highgui.hpp>
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <opencv2/videoio.hpp>
-#include <icpmodule.hpp>
 #include <thread> 
-
+#include <icpmodule.hpp>
+#include <imumodule.hpp>
 
 
 bool ctrl_c_pressed;
@@ -51,7 +45,9 @@ int main(int argc, const char *argv[])
     // ICP icp;
     // std::thread icp_thread(icp.start_updater);
     ICP * icp_ptr = new ICP();
+    IMU * imu_ptr = new IMU();
     std::thread icp_thread(&ICP::start_updater, icp_ptr);
+    std::thread imu_thread(&IMU::start_updater, imu_ptr);
 	signal(SIGINT, ctrlc);
     while (true)
     {
@@ -61,6 +57,13 @@ int main(int argc, const char *argv[])
             std::cout << "Updated!" << std::endl;
             y_curr = icp_ptr->get_latest_y();
             y_curr.print();
+        }
+
+        arma::fmat imu_vals;
+        if (imu_ptr->updated)
+        {
+            imu_vals = imu_ptr->get_latest();
+            std::cout << "IMU: " << imu_vals << std::endl;
         }
 
 		if (ctrl_c_pressed)

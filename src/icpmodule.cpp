@@ -8,7 +8,7 @@ ICP::ICP(void)
     // Set the maximum number of iterations (criterion 1)
     icp.setMaximumIterations (50);
     // Set the transformation epsilon (criterion 2)
-    icp.setTransformationEpsilon (1e-3);
+    icp.setTransformationEpsilon (1e-8);
     // Set the euclidean distance difference epsilon (criterion 3)
     icp.setEuclideanFitnessEpsilon (1);
     std::cout << "ICP Instantiated" << std::endl;
@@ -24,18 +24,18 @@ void ICP::update_icp(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_km, pcl::PointClo
     pcl::Registration<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4 R_p;  // Create Eigen matrix to hold results.
     R_p = icp.getFinalTransformation();  // Obtain results from ICP.
     arma::fmat R_arma(R_p.data(), R_p.rows(), R_p.cols(), false, false);  // Convert Eigen to Armadillo mat.
-    std::cout << "R_arma" << R_arma << std::endl;
+    // std::cout << "R_arma" << R_arma << std::endl;
     arma::fmat R = {{R_arma(0,0), R_arma(0,1), R_arma(0,2)},
                     {R_arma(1,0), R_arma(1,1), R_arma(1,2)},
                     {R_arma(2,0), R_arma(2,1), R_arma(2,2)}};
     arma::fvec t = {R_arma(0,3), R_arma(1,3), R_arma(2,3)};
 
     // R.print();
-    std::cout << "R " << R << std::endl;
+    // std::cout << "R " << R << std::endl;
     // t.print();
-    std::cout << "t " << t << std::endl;
+    // std::cout << "t " << t << std::endl;
     std::lock_guard<std::mutex> lk(thread_guard);  // Lock thread access before writing to shared data.
-    icp_y = R.t() * (icp_y - t);
+    icp_y = R * (icp_y - t);
     updated = true;
 }
 
