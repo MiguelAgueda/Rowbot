@@ -5,8 +5,6 @@
 #include <i2c_comm.h>
 #include <time.h>
 #include <thread> 
-#include <icpmodule.hpp>
-#include <imumodule.hpp>
 
 
 bool ctrl_c_pressed;

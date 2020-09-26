@@ -1,4 +1,4 @@
-#include <armadillo>
+// #include <armadillo>
 #include <iostream>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
@@ -11,16 +11,15 @@ class ICP
 {
     private:
         std::mutex thread_guard;
-        arma::fvec icp_y = {0,0,0};
-
-        bool running = false;
+        Eigen::Vector3f icp_y = Eigen::Vector3f::Zero();
         pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
         void update_icp(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_km, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_k);
+        bool running = false;
     
     public:
         ICP();
         void start_updater();
         void stop_updater();
-        arma::fvec get_latest_y();
+        Eigen::Vector3f get_latest_y();
         bool updated = false;
 };

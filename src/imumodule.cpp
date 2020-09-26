@@ -36,7 +36,8 @@ void IMU::update_imu()
         // Lock thread before accessing shared data.
         std::lock_guard<std::mutex> lk(thread_guard);
         // Write values to `imu_vals`.
-        imu_vals = {{Ax, Gx}, {Ay, Gy}, {Az, Gz}};
+        imu_vals << Ax, Ay, Az,
+                    Gx, Gy, Gz;
         // Inform outer loop that data has been updated.
         updated = true;
     }
@@ -60,7 +61,7 @@ void IMU::stop_updater()
     running = false;
 }
 
-arma::fmat IMU::get_latest()
+Eigen::Matrix<float, 2, 3> IMU::get_latest()
 {
     std::lock_guard<std::mutex> lk(thread_guard);
     updated = false;

@@ -21,18 +21,14 @@ void ICP::update_icp(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_km, pcl::PointClo
 
     pcl::PointCloud<pcl::PointXYZ> Final;  // Create cloud to store result of icp alignment.
     icp.align(Final);  // Align the point clouds defined above.
-    pcl::Registration<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4 R_p;  // Create Eigen matrix to hold results.
+    // pcl::Registration<pcl::PointXYZ, pcl::PointXYZ, float>::Matrix4 R_p;  // Create Eigen matrix to hold results.
+    Eigen::Matrix<float, 4, 4> R_p;  // Create Eigen matrix to hold results.
     R_p = icp.getFinalTransformation();  // Obtain results from ICP.
-    arma::fmat R_arma(R_p.data(), R_p.rows(), R_p.cols(), false, false);  // Convert Eigen to Armadillo mat.
-    // std::cout << "R_arma" << R_arma << std::endl;
-    arma::fmat R = {{R_arma(0,0), R_arma(0,1), R_arma(0,2)},
-                    {R_arma(1,0), R_arma(1,1), R_arma(1,2)},
-                    {R_arma(2,0), R_arma(2,1), R_arma(2,2)}};
-    arma::fvec t = {R_arma(0,3), R_arma(1,3), R_arma(2,3)};
-
-    // R.print();
+    Eigen::Matrix3f R;
+    Eigen::Vector3f t;
+    R = R_p(Eigen::seq(0,2), Eigen(seq(0, 2)));
+    t = R_p(Eigen::seq(0,2), 3);
     // std::cout << "R " << R << std::endl;
-    // t.print();
     // std::cout << "t " << t << std::endl;
     std::lock_guard<std::mutex> lk(thread_guard);  // Lock thread access before writing to shared data.
     icp_y = R * (icp_y - t);
@@ -61,7 +57,7 @@ void ICP::stop_updater()
     shutdown_lidar();
 }
 
-arma::fvec ICP::get_latest_y()
+Eigen::Vector3f ICP::get_latest_y()
 {
     // Lock thread.
     std::lock_guard<std::mutex> lk(thread_guard);
