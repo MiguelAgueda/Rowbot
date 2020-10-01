@@ -11,6 +11,8 @@ ICP::ICP(void)
     icp.setTransformationEpsilon (1e-8);
     // Set the euclidean distance difference epsilon (criterion 3)
     icp.setEuclideanFitnessEpsilon (1);
+
+    setup_lidar();
     std::cout << "ICP Instantiated" << std::endl;
 }
 
@@ -26,7 +28,7 @@ void ICP::update_icp(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_km, pcl::PointClo
     R_p = icp.getFinalTransformation();  // Obtain results from ICP.
     Eigen::Matrix3f R;
     Eigen::Vector3f t;
-    R = R_p(Eigen::seq(0,2), Eigen(seq(0, 2)));
+    R = R_p(Eigen::seq(0,2), Eigen::seq(0, 2));
     t = R_p(Eigen::seq(0,2), 3);
     // std::cout << "R " << R << std::endl;
     // std::cout << "t " << t << std::endl;
@@ -38,7 +40,6 @@ void ICP::update_icp(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_km, pcl::PointClo
 void ICP::start_updater()
 {
     running = true;
-    setup_lidar();
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_k, cloud_km;
     cloud_km = get_lidar_data();
     while(running)
@@ -53,6 +54,7 @@ void ICP::start_updater()
 
 void ICP::stop_updater()
 {
+    std::cout << "Stopping ICP Updater\n";
     running = false;
     shutdown_lidar();
 }

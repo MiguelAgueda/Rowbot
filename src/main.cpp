@@ -1,10 +1,12 @@
+#include <common.hpp>
 #include <signal.h>
 #include <fstream>
 #include <cmath>
 #include <bits/stdc++.h> 
 #include <i2c_comm.h>
 #include <time.h>
-#include <thread> 
+
+#include <ekfmodule.hpp>
 
 
 bool ctrl_c_pressed;
@@ -42,39 +44,49 @@ int main(int argc, const char *argv[])
 {
     // ICP icp;
     // std::thread icp_thread(icp.start_updater);
-    ICP * icp_ptr = new ICP();
-    IMU * imu_ptr = new IMU();
-    std::thread icp_thread(&ICP::start_updater, icp_ptr);
-    std::thread imu_thread(&IMU::start_updater, imu_ptr);
+    // ICP * icp_ptr = new ICP();
+    // IMU * imu_ptr = new IMU();
+    // std::thread icp_thread(&ICP::start_updater, icp_ptr);
+    // std::thread imu_thread(&IMU::start_updater, imu_ptr);
 	signal(SIGINT, ctrlc);
+    ES_EKF * ekf_ptr = new ES_EKF();
+    
+    std::thread ekf_thread(&ES_EKF::start_updater, ekf_ptr);
+
     while (true)
     {
-        arma::fvec y_curr;
-        if (icp_ptr->updated)
-        {
-            std::cout << "Updated!" << std::endl;
-            y_curr = icp_ptr->get_latest_y();
-            y_curr.print();
-        }
+        sleep(1);
+    // std::cout << "i";
+    //     arma::fvec y_curr;
+    //     if (icp_ptr->updated)
+    //     {
+    //         std::cout << "Updated!" << std::endl;
+    //         y_curr = icp_ptr->get_latest_y();
+    //         y_curr.print();
+    //     }
 
-        arma::fmat imu_vals;
-        if (imu_ptr->updated)
-        {
-            imu_vals = imu_ptr->get_latest();
-            std::cout << "IMU: " << imu_vals << std::endl;
-        }
+    //     arma::fmat imu_vals;
+    //     if (imu_ptr->updated)
+    //     {
+    //         imu_vals = imu_ptr->get_latest();
+    //         std::cout << "IMU: " << imu_vals << std::endl;
+    //     }
 
 		if (ctrl_c_pressed)
 		{
-			if (CSV_FILE.is_open())
-			{
-				CSV_FILE.close();
-			}
-			shutdown_lidar();
-			printf("Exiting Program.\n");
-			return 0;
+            std::cout << "Ctrl-C Pressed!\n\n";
+            ekf_ptr -> stop_updater();
+            ekf_thread.join();
+			// if (CSV_FILE.is_open())
+			// {
+			// 	CSV_FILE.close();
+			// }
+			// shutdown_lidar();
+			// printf("Exiting Program.\n");
+			// return 0;
 		}
     }
+}
 
 	// connect_i2c();
 	// // Debugging OpenCV linking issues. Should be version 4.3.0.
@@ -221,4 +233,4 @@ int main(int argc, const char *argv[])
 	// 		std::cout << "Program averaged: " << counter  << " cycles in " << total_time << " seconds\n";
 	// 	}
 	// }
-}
+// }

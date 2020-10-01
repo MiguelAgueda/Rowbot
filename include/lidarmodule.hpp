@@ -1,9 +1,8 @@
+#include <common.hpp>
 #include <rplidar.h> //RPLIDAR standard sdk, all-in-one header
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
 #include <fstream>
-#include <armadillo>
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>

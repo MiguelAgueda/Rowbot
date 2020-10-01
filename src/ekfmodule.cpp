@@ -1,17 +1,19 @@
 #include <ekfmodule.hpp>
 
-// Define variable for 3x3 identity matrix.
-const Eigen::Matrix3f I_3 = Eigen::Matrix<float, 3, 3>::Identity();
-const Eigen::Matrix<float, 9, 9> I_9 = Eigen::Matrix<float, 9, 9>::Identity();
+
 
 ES_EKF::ES_EKF()
 {
 /*
  * EKF Default Constructor.
  */
-
     icp_ptr = new ICP();
-    imu_ptr = new IMU();
+    mpu_ptr = new IMU();
+    std::cout << "Sleeping for 5 seconds.\n";
+    // useconds_t useconds = 5000;
+    sleep(5);
+
+    std::cout << "EKF Constructed" << std::endl;
 }
 
 Eigen::Matrix3f ES_EKF::skew_symmetric(Eigen::Vector3f v)
@@ -78,9 +80,9 @@ ekf_update_return ES_EKF::measurement_update(float sensor_var,                  
     ekf_update_return corrected_state;
 
     // 3.1 Compute Kalman Gain.
-    Eigen::Matrix3f R = I_3 * sensor_var;
-    Eigen::Matrix3f to_invert = h_jac * P_cov_check * h_jac.t() + R;
-    Eigen::Matrix<float, 9, 3> K_gain = P_cov_check * h_jac.t() * arma::inv(to_invert);
+    Eigen::Matrix3f R = sensor_var * I_3;
+    Eigen::Matrix3f to_invert = h_jac * P_cov_check * h_jac.transpose() + R;
+    Eigen::Matrix<float, 9, 3> K_gain = P_cov_check * h_jac.transpose() * to_invert.inverse();
 
     // 3.2 Compute Error State. ES[0:3] contains p_correction, ES[3:6] contains v_correction.
     Eigen::Vector<float, 9> error_state = K_gain * (y_k - p_check);
@@ -92,8 +94,8 @@ ekf_update_return ES_EKF::measurement_update(float sensor_var,                  
     es_v = error_state(Eigen::seq(3, 5));
     es_q = error_state(Eigen::seq(6, 8));
     // 3.3.1 Apply error_state (es) corrections to state.
-    corrected_state.p_hat = corrected_state.p_hat + es_p;
-    corrected_state.v_hat = corrected_state.v_hat + es_v;
+    corrected_state.p_hat = p_check + es_p;
+    corrected_state.v_hat = v_check + es_v;
     // Create quaternion using error_state.
     Eigen::Matrix3f es_q_axis_angle;
     es_q_axis_angle = Eigen::AngleAxisf(es_q(0), Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(es_q(1), Eigen::Vector3f::UnitY()) * Eigen::AngleAxisf(es_q(2), Eigen::Vector3f::UnitZ());
@@ -102,31 +104,35 @@ ekf_update_return ES_EKF::measurement_update(float sensor_var,                  
     corrected_state.q_hat = es_quaternion * q_check;
 
     // 3.4 Compute Corrected Covariance.
-    corrected_state.p_cov_hat = (I_9 - (K_gain * h_jac)) * corrected_state.p_cov_hat;
+    corrected_state.P_cov_hat = (I_9 - (K_gain * h_jac)) * P_cov_check;
 
     return corrected_state;
 }
 
-void ES_EKF::start_ekf()
+void ES_EKF::start_updater()
 {
     running = true;
 
     // Start threads for GNSS / IMU / ICP objects.
     std::thread icp_thread(&ICP::start_updater, icp_ptr);
-    std::thread imu_thread(&IMU::start_updater, imu_ptr);
+    std::thread mpu_thread(&IMU::start_updater, mpu_ptr);
 
     // Initialize state to zeros.
     Eigen::Vector3f p_km = Eigen::Vector3f::Zero();
     Eigen::Vector3f v_km = Eigen::Vector3f::Zero();
 
-    Matrix3f euler_init;
+    Eigen::Vector3f g;
+    g << 0, 0, -9.81;
+
+    Eigen::Matrix3f euler_init;
     euler_init = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()) * Eigen::AngleAxisf(0, Eigen::Vector3f::UnitY()) * Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ());
 
     Eigen::Quaternionf q_km(euler_init); // Convert Euler to Quaternion.
 
     Eigen::Matrix<float, 9, 9> P_cov_km = Eigen::Matrix<float, 9, 9>::Zero();
 
-    Eigen::Matrix<float, 9, 9> F = Eigen::Matrix<float, 9, 9>::Identity();
+    // Eigen::Matrix<float, 9, 9> F = Eigen::Matrix<float, 9, 9>::Identity();
+    Eigen::Matrix<float, 9, 9> F = I_9;
     Eigen::Matrix<float, 6, 6> Q = Eigen::Matrix<float, 6, 6>::Identity();
 
     auto t_km = std::chrono::steady_clock::now();
@@ -134,7 +140,7 @@ void ES_EKF::start_ekf()
 
     while (running)
     {
-    if (imu_ptr->updated)
+    if (mpu_ptr -> updated)
     {
         /* 0.0
          * Compute necessary prerequisite data.
@@ -143,16 +149,19 @@ void ES_EKF::start_ekf()
         // 0.1 Compute `delta_t` for current time step.
         auto t_k = std::chrono::steady_clock::now();
         float delta_t = (t_k - t_km).count() * 1e-9; // Convert [ns] to [s].
+        t_km = t_k;  // Update last time stamp.
 
         // 0.2 GET IMU F, W;
         // Initialize containers for IMU data.
         Eigen::Matrix<float, 2, 3> IMU_X;
         Eigen::Vector3f imu_f, imu_w;
         // Update IMU_X matrix with latest data.
-        IMU_X = imu_ptr->get_latest();
+        IMU_X = mpu_ptr -> get_latest();
         // Separate matrix into vector components for specific force, angular velocity.
         imu_f = IMU_X(0, Eigen::all); // Units of [g].
         imu_w = IMU_X(1, Eigen::all); // Units of [rad/s].
+
+        // std::cout << "IMU_F:\n " << imu_f << "\n\n";
 
         /* 1
          * Update state with IMU update.
@@ -161,12 +170,13 @@ void ES_EKF::start_ekf()
         // Initialize variables for state update step.
         Eigen::Matrix<float, 9, 9> P_cov_est;
         Eigen::Vector3f p_est, v_est;
-        Eigen::Quaternionf q_est;
+        Eigen::Quaternionf q_est, q_km_normed;
 
         // Convert quaternion representation to rotation matrix.
-        Eigen::Matrix3f C_ns = q_km.toRotationMatrix();
+        q_km_normed = q_km.normalized();
+        Eigen::Matrix3f C_ns = q_km_normed.toRotationMatrix();
         // Use rotation matrix, with imu_f, to update position and velocity.
-        p_est = p_km + (v_km * delta_t) + ((std::pow(delta_t, 2) / 2) * ((C_ns * g) + g));
+        p_est = p_km + (delta_t * v_km) + ((std::pow(delta_t, 2) / 2) * ((C_ns * imu_f) + g));
         v_est = v_km + delta_t * ((C_ns * imu_f) + g);
 
         // Compute Euler angle from IMU.
@@ -200,16 +210,19 @@ void ES_EKF::start_ekf()
         /* 3
          * Check for availability of corrective measurements (LiDAR, GNSS).
          */
-        if (lidar->updated)
+        if (icp_ptr -> updated)
         {
             // Perform update step with LiDAR data.
             ekf_update_return corrected_state;
-            Eigen::Vector3f y_lidar = lidar->get_latest();
+            Eigen::Vector3f y_lidar = icp_ptr -> get_latest_y();
+            std::cout << "LiDAR Estimate: \n" << y_lidar << std::endl;
             corrected_state = measurement_update(var_lidar, P_cov_est, y_lidar, p_est, v_est, q_est);
             p_est = corrected_state.p_hat;
             v_est = corrected_state.v_hat;
             q_est = corrected_state.q_hat;
             P_cov_est = corrected_state.P_cov_hat;
+            std::cout << "Corrected Position: \n" << p_est << std::endl;
+            std::cout << "Corrected Velocity: \n" << v_est << std::endl;
         }
 
         // if (gnss->updated)
@@ -225,6 +238,21 @@ void ES_EKF::start_ekf()
         v_km = v_est;
         q_km = q_est;
         P_cov_km = P_cov_est;
-    }  // End "if (imu_ptr->updated)" block.
+
+        // std::cout << "P_km \n" << p_km << "\n\n";
+    }  // End "if (mpu_ptr->updated)" block.
     }  // End "while (running)" block.
+    
+    // When running is set to false,
+    icp_ptr -> stop_updater();
+    icp_thread.join();
+
+    mpu_ptr -> stop_updater();
+    mpu_thread.join();
+
 }  // End "start_ekf()" block.
+
+void ES_EKF::stop_updater()
+{
+    running = false;
+}

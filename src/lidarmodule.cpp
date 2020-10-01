@@ -111,11 +111,12 @@ void shutdown_lidar()
 {
 	driver->stop();			 // Stop scanning.
 	driver->stopMotor(); // Stop spinning RPLiDAR motor.
+    std::cout << "Shutting Down LiDAR.\n";
 }
 
 float deg2rad(float deg)
 {
-    return (deg * arma::datum::pi / 180);
+    return (deg * 3.1415926 / 180);
 }
 
 pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data()
@@ -133,7 +134,6 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data()
 	if (IS_FAIL(op_result))
 	{
 		printf("Failed to get scan data.");
-		// arma::fmat Empty(3, 1, arma::fill::zeros);
         pcl::PointCloud<pcl::PointXYZ>::Ptr Empty (new pcl::PointCloud<pcl::PointXYZ>);
         return Empty;
 	}
