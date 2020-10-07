@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <fstream>
-
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 #include <pcl/registration/icp.h>

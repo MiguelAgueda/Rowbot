@@ -10,7 +10,6 @@
 struct I2C_IN_PACK
 {
 	bool DriveAutonomously = false;
-	// bool DriveByUser = false;
 	bool SaveScanData = false;
 	bool Shutdown = false;
 	int8_t joystick_x = 0;

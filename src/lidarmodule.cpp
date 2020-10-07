@@ -1,3 +1,9 @@
+/*
+ * RPLiDAR access functions implementation.
+ * 
+ * This module handles communication with the RPLiDAR A2.
+ */
+
 #include <lidarmodule.hpp>
 
 using namespace rp::standalone::rplidar;
@@ -11,14 +17,15 @@ u_result op_result;
 
 bool LIDAR_ALREADY_SETUP = false;
 
+/* This method collects the current health information from the RPLiDAR device. 
+ *
+ * Returns
+ * -------
+ * 		True - Device is okay, ready to go.
+ * 		False - Device could not be connected to / not in good health.
+ */
 bool checkRPLIDARHealth(RPlidarDriver *driver)
 {
-	/* This method collects the current health information from the RPLiDAR 
-	 * device. 
-	 * Returns:
-	 * 		true - Device is okay, ready to go.
-	 * 		false - Device could not be connected to / Device not in good health.
-	 */
 	u_result op_result;
 	rplidar_response_device_health_t healthinfo;
 
@@ -45,12 +52,13 @@ bool checkRPLIDARHealth(RPlidarDriver *driver)
 	}
 }
 
+/* Runs setup routine for RPLiDAR.
+ *
+ * Assigns global pointer, `driver`, to an instance of RPLiDAR driver on
+ * the specified port with baudrate 115200; the baudrate for RPLiDAR A2.
+ */
 void setup_lidar()
 {
-	/* Runs setup routine for RPLiDAR.
-	 * Assigns global pointer, `driver`, to an instance of RPLiDAR driver on
-	 * the specified port with baudrate 115200; the baudrate for RPLiDAR A2.
-	 */
 	// if (LIDAR_ALREADY_SETUP)
 	// 	return;
 
@@ -107,25 +115,53 @@ void setup_lidar()
 	LIDAR_ALREADY_SETUP = true;
 }
 
+/*
+ * Shutdown LiDAR scanner, stop motor.
+ */
 void shutdown_lidar()
 {
-	driver->stop();			 // Stop scanning.
-	driver->stopMotor(); // Stop spinning RPLiDAR motor.
+	driver->stop();  // Stop scanning.
+	driver->stopMotor();  // Stop spinning RPLiDAR motor.
     std::cout << "Shutting Down LiDAR.\n";
 }
 
+/*
+ * Convert angular measurement from degrees to radians.
+ * 
+ * Parameters
+ * ----------
+ *      float : deg
+ *          Measurement to be converted, in units of degrees.
+ * 
+ * Returns
+ * -------
+ *      float : rad
+ *          Converted measurement, in units of radians.
+ */
 float deg2rad(float deg)
 {
-    return (deg * 3.1415926 / 180);
+    float rad = deg * 3.1415926 / 180;
+    return rad;
 }
 
+/*
+ * Process LiDAR output into PCL point cloud.
+ * 
+ * Returns
+ * -------
+ *      pcl::PointCloud::Ptd : Pointer to latest point cloud data.
+ * 
+ * Assumptions
+ * -----------
+ *      The rover's environment is flat.
+ * 
+ *      Since the RPLiDAR A2 is a 2D range scanner, the z-coordinate for every
+ *          point is set to zero.
+ *      This effect is not accounted for in any way by the ICP algorithm,
+ *          leading to a zeroing of the EKF Z-coordinate via corrective update.
+ */
 pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data()
 {
-	/*
-	Retrieve a scan from the LiDAR.
-	Format scan into series of two vectors.
-	Return DataToSave object containing formatted LiDAR data.
-	*/
 	rplidar_response_measurement_node_hq_t nodes[1024]; // Create response node of size 1024.
 	size_t count = _countof(nodes);
 

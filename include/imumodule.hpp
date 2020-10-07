@@ -1,29 +1,36 @@
 #include <common.hpp>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
-#include <unistd.h>
+#include <string.h>
+#include <math.h>
 #include "I2Cdev.h"
-#include "MPU6050.h"
 
 
 class IMU
 {
 private:
     std::mutex thread_guard;
-    // static const MPUIMU::Ascale_t ASCALE = MPUIMU::AFS_2G;
-    // static const MPUIMU::Gscale_t GSCALE = MPUIMU::GFS_250DPS;
-    MPU6050 mpu;
-    Eigen::Matrix<float, 2, 3> IMU_VALS = Eigen::Matrix<float, 2, 3>::Zero();
-    Eigen::Matrix<float, 2, 3> IMU_OFFSET = Eigen::Matrix<float, 2, 3>::Zero();
-    bool setup_imu();
-    void update_imu();
+    Eigen::Matrix<float, 2, 4> IMU_VALS = Eigen::Matrix<float, 2, 4>::Zero();
+    Eigen::Vector3f IMU_RAW_OFFSET = Eigen::Vector3f::Zero();
     void calibrate_imu(int);
     bool running = false;
 
+    // MPU control/status vars
+    bool dmpReady = false;  // set true if DMP init was successful
+    uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
+    uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
+    uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
+    uint16_t fifoCount;     // count of all bytes currently in FIFO
+    uint8_t fifoBuffer[64]; // FIFO storage buffer
+
 public:
     IMU();
+    bool setup_imu();
+    bool update_raw_imu();
+    void update_imu();
     void start_updater();
     void stop_updater();
-    Eigen::Matrix<float, 2, 3> get_latest();
+    Eigen::Matrix<float, 2, 4> get_latest();
     bool updated = false;
 };

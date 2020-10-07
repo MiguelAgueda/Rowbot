@@ -1,14 +1,8 @@
-/*
- * Header file for `ekfmodule.cpp`.
- */
 #include <common.hpp>
-
 #include <chrono>
 #include <cmath>
-
 #include <icpmodule.hpp>
 #include <imumodule.hpp>
-
 
 
 struct ekf_update_return
