@@ -15,8 +15,12 @@ In its current stage, Rowbot is small rover built upon the Wild Thumper developm
 ### Onboard Computer
 
 Today, the main computer aboard Rowbot is the Nvidia Jetson Nano.
-This SOC provides two Camera Serial ports, making it easier, and cheaper,
-    to develop a vison-based mapping system.
+The Nvidia Jetson Nano provides two Camera Serial ports. 
+This makes it easier, and cheaper, to develop a vison-based mapping system, a future goal of mine.
+
+Also onboard the Rowbot is an Ardiuno Pro Mini MCU.
+This MCU handles radio communication and motor control.
+
 
 ### Sensors
 
