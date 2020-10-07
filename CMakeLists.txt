@@ -21,6 +21,7 @@ FILE(GLOB RPLIDAR_SDK_SRC
 
 include_directories(
   include
+  /usr/local/include/eigen3/
   ${RPLIDAR_SDK_PATH}/include
   ${RPLIDAR_SDK_PATH}/src
   ${RPLIDAR_SDK_PATH}/src/
@@ -36,4 +37,4 @@ add_definitions(${PCL_DEFINITIONS})
 file(GLOB SOURCES "src/*.cpp")
 
 add_executable (main ${SOURCES} ${RPLIDAR_SDK_SRC})
-target_link_libraries (main ${PCL_LIBRARIES} armadillo m)
+target_link_libraries (main ${PCL_LIBRARIES} m)
