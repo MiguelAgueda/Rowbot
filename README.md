@@ -1,43 +1,26 @@
-Fork of Slamtec RPLIDAR Public SDK for C++
-==================================
+# What is *Rowbot*?
 
-Introduction
-------------
-This fork may include some helpful information for those confused by the official SDK documentation.
-I have updated the section on running the built program. 
+Rowbot is my passion project.
+My end goal is to create an autonomous vehicle capable of carrying out specific tasks.
+In its current stage, Rowbot is small rover built upon the Wild Thumper development platform.
 
-Quick Start
------------
+## Here's what it looks like
 
-### On Windows
+![Whole Rover](assets/version1/wholeView.JPG)
 
-If you have Microsoft Visual Studio installed, just open sdk/workspaces/vc14/sdk_and_demo.sln, and build the soultion.
+---
 
-After building, the executables can be found in the `rplidar_sdk\sdk\output\win32\Debug\` folder. 
+## Components Used
 
+### Onboard Computer
 
-Demo Applications
------------------
+Today, the main computer aboard Rowbot is the Nvidia Jetson Nano.
+This SOC provides two Camera Serial ports, making it easier, and cheaper,
+    to develop a vison-based mapping system.
 
-To execute the application, we will use Powershell.
+### Sensors
 
-Before executing anything, navigate to the directory containing the executables.
+Rowbot uses the following sensors:
 
-Then, you can execute the program using the following,
-
-### ultra_simple
-
-This demo application simply connects to an RPLIDAR device and outputs the scan data to the console.
-This is where the official SDK documentation lost me. 
-
-    ultra_simple <serial_port_device>  # This isn't helpful.
-
-The above command will result in an error via Windows Powershell.
-
-To execute the program, do this instead:
-
-    .\ultra_simple COM_NUMBER  # Use this instead.
-
-If your RPLidar is connected to COM8, your command should be:
-
-    .\ultra_simple COM8
+- [RPLidar A2 2D Range Scanner](https://www.slamtec.com/en/Lidar/A2)
+- [MPU6050 Accelerometer and Gyroscope](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/)
