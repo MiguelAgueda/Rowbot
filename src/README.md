@@ -22,9 +22,9 @@ This is a variation of the Extended Kalman Filter (EKF) which estimates
 For an excellent overview of the EKF, see section 3.3 of 
     Probabilistic Robotics (Thrun, Burgard, Fox).
 
-### Here is a high-level overview of the EKF implemented in `ekfmodule`.
+### Here is a high-level overview of the EKF implemented in [`ekfmodule`](https://github.com/MiguelAgueda/Rowbot/blob/master/src/ekfmodule.cpp).
 
-![The EKF-Process](../assets/software/EKFProcess.jpeg)
+[<img src=../assets/software/EKFProcess.jpeg height=500>]()
 
 
 ### The Iterative Point Cloud (ICP)
@@ -33,6 +33,6 @@ The ICP algorithm processes sequential LiDAR range scans in order to provide
     movement estimates over time. 
 As the name suggests, the ICP algorithm estimates motion by aligning point cloud data.
 
-### Here is an overview of the ICP process implemented in `icpmodule`.
+### Here is an overview of the ICP process implemented in [`icpmodule`](https://github.com/MiguelAgueda/Rowbot/blob/master/src/icpmodule.cpp).
 
-![The ICP Process](../assets/software/ICPProcess.png)
+<img src=../assets/software/ICPProcess.png height=400>

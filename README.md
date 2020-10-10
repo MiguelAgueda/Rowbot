@@ -6,7 +6,7 @@ In its current stage, Rowbot is small rover built upon the Wild Thumper developm
 
 ## Here's what it looks like
 
-![Whole Rover](assets/version1/wholeView.JPG)
+<img src=assets/version1/wholeView.JPG height=300>
 
 ---
 
@@ -32,4 +32,4 @@ Rowbot uses the following sensors:
 
 ## Software Overview
 
-For a software overview, check /src/README.
+For a software overview, check [`/src/README`](https://github.com/MiguelAgueda/Rowbot/blob/master/src/README.md).
