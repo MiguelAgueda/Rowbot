@@ -14,6 +14,9 @@ private:
     Eigen::Matrix<float, 2, 4> IMU_VALS = Eigen::Matrix<float, 2, 4>::Zero();
     Eigen::Vector3f IMU_RAW_OFFSET = Eigen::Vector3f::Zero();
     void calibrate_imu(int);
+    bool setup_imu();
+    void update_imu();
+    bool update_raw_imu();
     bool running = false;
 
     // MPU control/status vars
@@ -26,9 +29,6 @@ private:
 
 public:
     IMU();
-    bool setup_imu();
-    bool update_raw_imu();
-    void update_imu();
     void start_updater();
     void stop_updater();
     Eigen::Matrix<float, 2, 4> get_latest();
