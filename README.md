@@ -28,3 +28,8 @@ Rowbot uses the following sensors:
 
 - [RPLidar A2 2D Range Scanner](https://www.slamtec.com/en/Lidar/A2)
 - [MPU6050 Accelerometer and Gyroscope](https://invensense.tdk.com/products/motion-tracking/6-axis/mpu-6050/)
+
+
+## Software Overview
+
+For a software overview, check /src/README.
