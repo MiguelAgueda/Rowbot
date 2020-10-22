@@ -36,3 +36,24 @@ As the name suggests, the ICP algorithm estimates motion by aligning point cloud
 ### Here is an overview of the ICP process implemented in [`icpmodule`](https://github.com/MiguelAgueda/Rowbot/blob/master/src/icpmodule.cpp).
 
 <img src=../assets/software/ICPProcess.png height=400>
+
+## Building the Source Code
+
+To compile the Rowbot project:
+
+1. Navigate to the Rowbot root folder,
+    
+        cd Rowbot/
+
+2. Run CMake to generate make instructions.
+    Instructions are defined in [`CMakeLists.txt`]()
+
+        cmake .
+    
+3. Run generated Makefile,
+
+        make
+
+4. Assuming compilation succeeded without error, the generated executable can be run,
+
+        ./main
