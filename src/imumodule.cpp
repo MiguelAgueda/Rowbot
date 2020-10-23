@@ -107,6 +107,11 @@ bool IMU::update_raw_imu()
         mpu.dmpGetAccel(&ACCEL, fifoBuffer);
         return true;  // ACCEL has been updated.
     }
+    else
+    {
+        return false;
+    }
+    
 }
 
 /*

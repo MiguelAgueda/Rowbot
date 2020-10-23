@@ -46,6 +46,6 @@ private:
                                          Eigen::Vector3f y_k,                    // Measurement for update.
                                          Eigen::Vector3f p_check,                // Current position estimate.
                                          Eigen::Vector3f v_check,                // Current velocity estimate.
-                                         Eigen::Quaternionf q_check,              // Current pose estimate (Quaternion).
+                                         Eigen::Quaternionf q_check              // Current pose estimate (Quaternion).
                                          );
 };
