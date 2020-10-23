@@ -32,4 +32,4 @@ Rowbot uses the following sensors:
 
 ## Software Overview
 
-For a software overview, check [`/src/README`](https://github.com/MiguelAgueda/Rowbot/blob/master/src/README.md).
+For a software overview, check [`/src/README`](/src/README.md).
