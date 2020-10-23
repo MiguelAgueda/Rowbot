@@ -91,6 +91,24 @@ void setup_lidar()
 			driver = NULL;
 		}
 	}
+    if (!connectSuccess)
+    {
+	    opt_com_path = "/dev/ttyUSB1";
+	    if (IS_OK(driver->connect(opt_com_path, 115200)))
+	    {
+	    	op_result = driver->getDeviceInfo(devinfo);
+
+	    	if (IS_OK(op_result))
+	    	{
+	    		connectSuccess = true;
+	    	}
+	    	else
+	    	{
+	    		delete driver;
+	    		driver = NULL;
+	    	}
+	    }
+    }
 
 	if (!connectSuccess)
 	{
