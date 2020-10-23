@@ -62,7 +62,7 @@ ekf_update_return ES_EKF::measurement_update(float sensor_var,                  
                                              Eigen::Vector3f y_k,                    // Measurement for update.
                                              Eigen::Vector3f p_check,                // Current position estimate.
                                              Eigen::Vector3f v_check,                // Current velocity estimate.
-                                             Eigen::Quaternionf q_check             // Current pose estimate (Quaternion).
+                                             Eigen::Quaternionf q_check,             // Current pose estimate (Quaternion).
                                             )
 {
 
