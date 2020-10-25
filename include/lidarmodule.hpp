@@ -10,4 +10,4 @@
 
 void setup_lidar();
 void shutdown_lidar();
-pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data();
+pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data(bool, float);

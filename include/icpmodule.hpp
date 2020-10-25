@@ -16,7 +16,7 @@ class ICP
     
     public:
         ICP();
-        void start_updater();
+        void start_updater(bool, std::chrono::steady_clock::time_point);
         void stop_updater();
         Eigen::Vector3f get_latest_y();
         bool updated = false;

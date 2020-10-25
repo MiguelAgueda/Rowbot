@@ -37,14 +37,18 @@ void ICP::update_icp(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_km, pcl::PointClo
     updated = true;
 }
 
-void ICP::start_updater()
+void ICP::start_updater(bool logging, std::chrono::steady_clock::time_point t_start)
 {
     running = true;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_k, cloud_km;
-    cloud_km = get_lidar_data();
+    std::chrono::steady_clock::time_point t_now = std::chrono::steady_clock::now();
+    float t_k = (t_now - t_start).count() * 1e-9;
+    cloud_km = get_lidar_data(logging, t_k);
     while(running)
     {
-        cloud_k = get_lidar_data();
+        t_now = std::chrono::steady_clock::now();
+        t_k = (t_now - t_start).count() * 1e-9;
+        cloud_k = get_lidar_data(logging, t_k);
         // perform ICP.
         update_icp(cloud_km, cloud_k);
         // Set last cloud to current cloud. This is done after all computation involving last cloud.

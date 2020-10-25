@@ -18,6 +18,8 @@ private:
     void update_imu();
     bool update_raw_imu();
     bool running = false;
+    std::fstream IMU_FILE;  // For saving IMU data.
+    std::chrono::steady_clock::time_point t_start;
 
     // MPU control/status vars
     bool dmpReady = false;  // set true if DMP init was successful
@@ -31,6 +33,6 @@ public:
     IMU();
     void start_updater();
     void stop_updater();
-    Eigen::Matrix<float, 2, 4> get_latest();
+    Eigen::Matrix<float, 2, 4> get_latest(bool, float);
     bool updated = false;
 };

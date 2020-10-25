@@ -32,7 +32,11 @@ IMU::IMU(void)
         std::cout << "IMU Setup Not Successful\n";
     }
 
-    calibrate_imu(150);  // Perform calibration with 150 measurements. 
+    calibrate_imu(150);  // Perform calibration with 150 measurements.
+
+    const char *imu_file = "/home/rowbot/Documents/Rowbot/datasets/test/imu.csv";
+    IMU_FILE.open(imu_file, std::fstream::out);
+    t_start = std::chrono::steady_clock::now();
 }
 
 /*
@@ -136,6 +140,9 @@ void IMU::update_imu()
         const float g_factor = 8192 / g_scalar;  // Conversion from raw units to G.
         float Ax, Ay, Az;
 
+        // std::chrono::steady_clock::time_point t_now = std::chrono::steady_clock::now();
+        // float t_k = (t_now - t_start).count();
+
         Ax = (ACCEL.x - IMU_RAW_OFFSET(0)) / g_factor;
         Ay = (ACCEL.y - IMU_RAW_OFFSET(1)) / g_factor;
         Az = (ACCEL.z - IMU_RAW_OFFSET(2)) / g_factor;
@@ -167,7 +174,7 @@ void IMU::calibrate_imu(int n)
         if (update_raw_imu())
         {
             i += 1;
-            Eigen::Matrix<float, 2, 4> IMU_X = get_latest();  // Get sample.
+            Eigen::Matrix<float, 2, 4> IMU_X = get_latest(false, 0.0);  // Get sample.
             // temp_imu_offset += IMU_X(0, Eigen::seq(0,2));  // Add sample to offset counter.
             temp_imu_offset += Eigen::Vector3f(ACCEL.x, ACCEL.y, ACCEL.z);  // Add sample to offset counter.
             std::cout << i << ": ";
@@ -192,6 +199,7 @@ void IMU::start_updater()
 {
     running = true;
 
+
     while (running)
     {
         update_imu();
@@ -204,6 +212,7 @@ void IMU::start_updater()
  */
 void IMU::stop_updater()
 {
+    IMU_FILE.close();
     running = false;
 }
 
@@ -218,8 +227,16 @@ void IMU::stop_updater()
  *          Cells [0, 0:2] contain acceleration [x y z].
  *          Cells [1, :] contain quaternion parameters [w x y z].
  */
-Eigen::Matrix<float, 2, 4> IMU::get_latest()
+Eigen::Matrix<float, 2, 4> IMU::get_latest(bool logging, float t_from_start)
 {
+    if (logging)
+    {
+        // const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, 0, ", ", ",", "[", "]", "\n");
+        const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, Eigen::DontAlignCols, ",", "", "", ";\n", "", "\n");
+        IMU_FILE << t_from_start << ";\n";
+        IMU_FILE << IMU_VALS.format(CSVFormat);
+    }
+
     // Lock thread before accessing shared data.
     std::lock_guard<std::mutex> lk(thread_guard);
     updated = false;

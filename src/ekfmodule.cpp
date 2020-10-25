@@ -106,8 +106,13 @@ ekf_update_return ES_EKF::measurement_update(float sensor_var,                  
 void ES_EKF::start_updater()
 {
     running = true;
+    // Initialize start time placeholder.
+    std::chrono::steady_clock::time_point t_start = std::chrono::steady_clock::now();
+    // Initialize last time stamp placeholder.
+    std::chrono::steady_clock::time_point t_km = std::chrono::steady_clock::now();
+
     // Start threads for GNSS / IMU / ICP objects.
-    std::thread icp_thread(&ICP::start_updater, icp_ptr);
+    std::thread icp_thread(&ICP::start_updater, icp_ptr, true, t_start);
     std::thread mpu_thread(&IMU::start_updater, mpu_ptr);
 
     // Fill in initializers for Jacobians.
@@ -131,8 +136,6 @@ void ES_EKF::start_updater()
     Eigen::Matrix<float, 9, 9> F = I_9;
     Eigen::Matrix<float, 6, 6> Q = Eigen::Matrix<float, 6, 6>::Identity();
 
-    // Initialize last time stamp placeholder.
-    auto t_km = std::chrono::steady_clock::now();
     std::cout << "Starting EKF... \n";
     while (running)
     {
@@ -143,17 +146,20 @@ void ES_EKF::start_updater()
              * We need the change in time, delta_t, as well as the latest IMU data, imu_X.
              */
             // 0.1 Compute `delta_t` for current time step.
-            auto t_k = std::chrono::steady_clock::now();
+            std::chrono::steady_clock::time_point t_k = std::chrono::steady_clock::now();
             float delta_t = (t_k - t_km).count() * 1e-9; // Convert [ns] to [s].
             t_km = t_k;                                  // Update last time stamp.
 
-            // 0.2 GET IMU F, W;
+            // 0.2 Compute time from program start, used for data logging.
+            float t_from_start = (t_k - t_start).count() * 1e-9;
+
+            // 0.3 GET IMU F, W;
             // Initialize containers for IMU data.
             Eigen::Matrix<float, 2, 4> IMU_X;
             Eigen::Vector3f imu_f;
             Eigen::Vector<float, 4> imu_quat;
             // Update IMU_X matrix with latest data.
-            IMU_X = mpu_ptr->get_latest();
+            IMU_X = mpu_ptr->get_latest(true, t_from_start);
             // Separate matrix into vector components for specific force, quaternion parameters.
             imu_f = IMU_X(0, Eigen::seq(0, 2)); // Specific force, units of [g].
             imu_quat = IMU_X(1, Eigen::all);    // Quaternion params [w, x, y, z]

@@ -11,6 +11,9 @@ using namespace rp::standalone::rplidar;
 RPlidarDriver *driver; // Initialize pointer for LiDAR driver.
 u_result op_result;
 
+std::fstream LIDAR_FILE;  // For saving IMU data.
+std::chrono::steady_clock::time_point t_start;
+
 #ifndef _countof
 #define _countof(_Array) (int)(sizeof(_Array) / sizeof(_Array[0]))
 #endif
@@ -130,6 +133,10 @@ void setup_lidar()
 	driver->getAllSupportedScanModes(scanModes);
 	driver->startScanExpress(false, scanModes[1].id);
 
+    const char *lidar_file = "/home/rowbot/Documents/Rowbot/datasets/test/lidar.csv";
+    LIDAR_FILE.open(lidar_file, std::fstream::out);
+    t_start = std::chrono::steady_clock::now();
+
 	LIDAR_ALREADY_SETUP = true;
 }
 
@@ -140,6 +147,7 @@ void shutdown_lidar()
 {
 	driver->stop();  // Stop scanning.
 	driver->stopMotor();  // Stop spinning RPLiDAR motor.
+    LIDAR_FILE.close();
     std::cout << "Shutting Down LiDAR.\n";
 }
 
@@ -178,7 +186,7 @@ float deg2rad(float deg)
  *      This effect is not accounted for in any way by the ICP algorithm,
  *          leading to a zeroing of the EKF Z-coordinate via corrective update.
  */
-pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data()
+pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data(bool logging, float t_from_start)
 {
 	rplidar_response_measurement_node_hq_t nodes[1024]; // Create response node of size 1024.
 	size_t count = _countof(nodes);
@@ -194,19 +202,31 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr get_lidar_data()
 	else
 	{
         int n_rays = (int)count;
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>(n_rays, 1));
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>(n_rays, 1));
+        Eigen::MatrixXf raw_lidar(2, n_rays);
         int i = 0;
 		for (auto& point : *cloud)
 		{
 			float theta = nodes[i].angle_z_q14 * 90.f / (1 << 14);
 			float dist = nodes[i].dist_mm_q2 / (1 << 2);
             dist = dist / 1000;  // Convert distance from [mm] to [m].
+
+            raw_lidar(0,i) = theta;
+            raw_lidar(1,i) = dist;
             point.x = dist * std::cos(deg2rad(theta));
             point.y = dist * std::sin(deg2rad(theta));
             point.z = 0; 
             ++i;
 		}
-    
-    return cloud;
+
+        if (logging)
+        {
+            // const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, 0, ", ", ",", "[", "]", "\n");
+            const static Eigen::IOFormat CSVFormat(Eigen::FullPrecision, Eigen::DontAlignCols, ",", "", "", ";\n", "", "\n");
+            LIDAR_FILE << t_from_start << ";\n";
+            LIDAR_FILE << raw_lidar.format(CSVFormat);
+        }
+
+        return cloud;
 	}
 }
