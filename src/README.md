@@ -27,7 +27,7 @@ For an excellent overview of the EKF, see section 3.3 of
 [<img src=../assets/software/EKFProcess.jpeg height=500>]()
 
 
-### The Iterative Point Cloud (ICP)
+### The Iterative Closest Point (ICP) Algorithm
 
 The ICP algorithm processes sequential LiDAR range scans in order to provide 
     movement estimates over time. 
